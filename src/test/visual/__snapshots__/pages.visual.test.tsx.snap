@@ -1,0 +1,97 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`visual regression snapshots > dashboard populated state 1`] = `
+<div>
+  <div
+    class="_page_8d47be"
+  >
+    <header
+      class="_header_8d47be"
+    >
+      <h1
+        id="dashboard-heading"
+      >
+        Today
+      </h1>
+      <a
+        class="_link_8d47be"
+        href="/long-term"
+      >
+        Long-term goals →
+      </a>
+    </header>
+    <form
+      class="_form_b14d95"
+    >
+      <div
+        class="_wrapper_4141cf"
+      >
+        <input
+          aria-label="Quick add task"
+          class="_input_4141cf"
+          placeholder="Add task… (! goal, + step)"
+          value=""
+        />
+      </div>
+    </form>
+  </div>
+</div>
+`;
+
+exports[`visual regression snapshots > long-term populated state 1`] = `
+<div>
+  <section
+    aria-labelledby="long-term-heading"
+    class="_page_e4a126"
+  >
+    <h1
+      id="long-term-heading"
+    >
+      Long-term
+    </h1>
+    <ul
+      class="_list_e4a126"
+    >
+      <li
+        class="_goal_e4a126"
+      >
+        <div
+          class="_goalHeader_e4a126"
+        >
+          <button
+            aria-expanded="false"
+            class="_expand_e4a126"
+            type="button"
+          >
+            Launch side project
+          </button>
+          <span
+            class="_progress_e4a126"
+          >
+            0
+             of 
+            1
+             steps
+          </span>
+        </div>
+        <div
+          class="_goalActions_e4a126"
+        >
+          <button
+            class="_button_c411cb _secondary_c411cb"
+            type="button"
+          >
+            Edit
+          </button>
+          <button
+            class="_button_c411cb _danger_c411cb"
+            type="button"
+          >
+            Delete
+          </button>
+        </div>
+      </li>
+    </ul>
+  </section>
+</div>
+`;

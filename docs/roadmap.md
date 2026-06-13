@@ -14,7 +14,7 @@ updated_at: "2026-06-13"
 
 | Outcome (the why) | Feature | Status |
 |---|---|---|
-| Solo planners get a fast offline daily loop with long-term goal steps, rollover, and manual backup — no accounts or sync | [dayflow-planner](./features/dayflow-planner/) | spec'd |
+| _Empty — promote from Next via `/sdd:roadmap`_ | — | — |
 
 ## Next — problems / opportunities (deliberately not yet spec'd)
 
@@ -33,4 +33,4 @@ updated_at: "2026-06-13"
 
 | Date | Outcome | Feature | PR |
 |---|---|---|---|
-| _None yet_ | — | — | — |
+| 2026-06-13 | Solo planners get a fast offline daily loop with long-term goal steps, rollover, and manual backup — no accounts or sync | [dayflow-planner](./features/dayflow-planner/) | _(open PR — see `docs/features/dayflow-planner/PR.md`)_ |

@@ -131,6 +131,25 @@ describe('backup service', () => {
     expect((await getAllDailyTasks(db)).map((t) => t.id)).toEqual(['keep-me']);
   });
 
+  it('merges by id within each store only (ADR-0003)', async () => {
+    const sharedId = 'shared-id-across-stores';
+    await saveDailyTask(db, buildDailyTask({ id: sharedId, title: 'On device daily' }));
+
+    const goal = buildLongTermTask({ id: 'goal-1', title: 'Goal' });
+    const incoming = buildBackupFile({
+      dailyTasks: [buildDailyTask({ id: sharedId, title: 'Backup daily duplicate' })],
+      longTermTasks: [goal],
+      steps: [buildStep({ id: sharedId, longTermTaskId: goal.id, title: 'Backup step' })],
+    });
+
+    const summary = await importMerge(db, incoming, { mode: 'merge', confirmed: true });
+
+    expect(summary).toEqual({ added: 2, skipped: 1 });
+    expect((await getAllDailyTasks(db)).map((t) => t.title)).toEqual(['On device daily']);
+    expect((await getAllLongTermTasks(db)).map((t) => t.id)).toEqual(['goal-1']);
+    expect((await getAllSteps(db)).map((s) => s.id)).toEqual([sharedId]);
+  });
+
   it('parses valid backup files', () => {
     const backup = buildBackupFile({
       dailyTasks: [buildDailyTask()],

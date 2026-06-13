@@ -170,6 +170,7 @@ function StepList({
   const { db } = usePlanner();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
 
   const handleDelete = async (step: Step) => {
     if (!db) return;
@@ -181,9 +182,15 @@ function StepList({
 
   const handleSave = async (stepId: string) => {
     if (!db) return;
-    await editStepTitle(db, stepId, editTitle);
-    setEditingId(null);
-    await onRefresh();
+    setEditError(null);
+    try {
+      await editStepTitle(db, stepId, editTitle);
+      setEditingId(null);
+      await onRefresh();
+    } catch (caught) {
+      if (isDomainError(caught)) setEditError(caught.message);
+      else throw caught;
+    }
   };
 
   return (
@@ -199,6 +206,7 @@ function StepList({
             <>
               <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
               <Button onClick={() => handleSave(step.id)}>Save</Button>
+              {editError && <InlineError>{editError}</InlineError>}
             </>
           ) : (
             <>

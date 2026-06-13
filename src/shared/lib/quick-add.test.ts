@@ -36,6 +36,13 @@ describe('parseQuickAddEntry', () => {
       title: 'Register domain',
     });
   });
+
+  it('treats unrecognized prefix as daily task (AC-16)', () => {
+    expect(parseQuickAddEntry('?Launch side project')).toEqual({
+      kind: 'daily',
+      title: '?Launch side project',
+    });
+  });
 });
 
 describe('validateTitle', () => {

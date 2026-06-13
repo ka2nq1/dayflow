@@ -44,6 +44,41 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isValidDailyTask(value: unknown): value is DailyTask {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === 'string' &&
+    isNonEmptyString(value.title) &&
+    typeof value.activeDate === 'string' &&
+    typeof value.completed === 'boolean' &&
+    typeof value.createdAt === 'string'
+  );
+}
+
+function isValidLongTermTask(value: unknown): value is LongTermTask {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === 'string' &&
+    isNonEmptyString(value.title) &&
+    typeof value.createdAt === 'string'
+  );
+}
+
+function isValidStep(value: unknown): value is Step {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === 'string' &&
+    typeof value.longTermTaskId === 'string' &&
+    isNonEmptyString(value.title) &&
+    typeof value.completed === 'boolean' &&
+    typeof value.createdAt === 'string'
+  );
+}
+
 export function validateBackup(data: unknown): data is DayflowBackup {
   if (!isRecord(data)) return false;
   if (data.dayflowBackupVersion !== DAYFLOW_BACKUP_VERSION) return false;
@@ -51,6 +86,9 @@ export function validateBackup(data: unknown): data is DayflowBackup {
   if (!Array.isArray(data.dailyTasks)) return false;
   if (!Array.isArray(data.longTermTasks)) return false;
   if (!Array.isArray(data.steps)) return false;
+  if (!data.dailyTasks.every(isValidDailyTask)) return false;
+  if (!data.longTermTasks.every(isValidLongTermTask)) return false;
+  if (!data.steps.every(isValidStep)) return false;
   return true;
 }
 
@@ -137,42 +175,40 @@ export async function importMerge(
     getAllSteps(db),
   ]);
 
-  const existingIds = new Set<string>([
-    ...existingDailies.map((task) => task.id),
-    ...existingGoals.map((task) => task.id),
-    ...existingSteps.map((step) => step.id),
-  ]);
+  const existingDailyIds = new Set(existingDailies.map((task) => task.id));
+  const existingGoalIds = new Set(existingGoals.map((task) => task.id));
+  const existingStepIds = new Set(existingSteps.map((step) => step.id));
 
   let added = 0;
   let skipped = 0;
 
   for (const task of backup.dailyTasks) {
-    if (existingIds.has(task.id)) {
+    if (existingDailyIds.has(task.id)) {
       skipped += 1;
       continue;
     }
     await putInStore(db, 'daily_tasks', task);
-    existingIds.add(task.id);
+    existingDailyIds.add(task.id);
     added += 1;
   }
 
   for (const task of backup.longTermTasks) {
-    if (existingIds.has(task.id)) {
+    if (existingGoalIds.has(task.id)) {
       skipped += 1;
       continue;
     }
     await putInStore(db, 'long_term_tasks', task);
-    existingIds.add(task.id);
+    existingGoalIds.add(task.id);
     added += 1;
   }
 
   for (const step of backup.steps) {
-    if (existingIds.has(step.id)) {
+    if (existingStepIds.has(step.id)) {
       skipped += 1;
       continue;
     }
     await putInStore(db, 'steps', step);
-    existingIds.add(step.id);
+    existingStepIds.add(step.id);
     added += 1;
   }
 

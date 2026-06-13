@@ -7,8 +7,8 @@ import {
   completeDailyTask,
   deleteDailyTaskWithConfirm,
   editDailyTaskTitle,
-  type ConfirmFn,
-} from '@/features/task-crud';
+} from '@/entities/daily-task';
+import type { ConfirmFn } from '@/shared/lib/confirm';
 import { runDayTransition } from './run-day-transition';
 
 export async function moveToToday(

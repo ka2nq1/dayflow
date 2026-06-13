@@ -20,5 +20,10 @@
 | T13 | Wire PWA offline shell | wiring | Aleksandr | S | T1, T10 | done |
 | T14 | Compose app routing and empty-state recovery | wiring | Aleksandr | S | T10–T13 | done |
 | T15 | Add core integration tests | tests | Aleksandr | M | T9, T14 | done |
+| T16 | Review fix: stage-2 quality (tie-break, merge dedup, validation, FSD) | domain | Aleksandr | S | T15 | done |
+| T17 | Review fix: storage error UX | ui | Aleksandr | S | T15 | done |
+| T18 | Review fix: component test coverage | tests | Aleksandr | M | T16, T17 | done |
+| T19 | Review fix: e2e-through-UI harness | tests | Aleksandr | M | T18 | done |
+| T20 | Review fix: visual-regression + load NFR suites | tests | Aleksandr | S | T18 | done |
 
-**Total:** 15 tasks, ~8–10 person-days.
+**Total:** 20 tasks, ~10–12 person-days.

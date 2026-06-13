@@ -1,5 +1,5 @@
 ---
-status: Draft
+status: Shipped
 owner: "Aleksandr"
 reviewers: ["Tech Lead"]
 updated_at: "2026-06-13"
@@ -440,6 +440,7 @@ Dedicated rows above cover every error and authorization AC (AC-05, AC-06, AC-07
 ## 8. Open questions
 
 - [ ] Should merge import recognize duplicates by exact identity only, or also by title and date when entries differ? Default now: recognize duplicates by exact identity only. — owner: Tech Lead, due: before sdd:design
-- [ ] What onboarding copy nudges first export within 7 days without nagging? Default now: one-time post-install hint on dashboard. — owner: PM, due: before sdd:design
+- [ ] What onboarding copy nudges first export within 7 days without nagging? Default now: one-time post-install hint on dashboard. — owner: PM, due: before ship *(deferred at review 2026-06-13)*
 - [ ] Is swipe-to-delete required in v1 or is button-only edit/delete sufficient? Default now: button-only acceptable for S scope. — owner: PM, due: before sdd:tasks
 - [ ] How should the app behave if local storage is unexpectedly cleared by the browser/OS? Default now: show empty state with recovery guidance pointing to backup import. — owner: Tech Lead, due: before sdd:design
+- [ ] Empty-state recovery banner test coverage (component or e2e-through-UI asserting copy + `/settings` link when store is empty). — owner: Tech Lead, due: with e2e suite *(deferred at review 2026-06-13)*

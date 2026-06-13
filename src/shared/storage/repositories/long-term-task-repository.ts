@@ -1,5 +1,5 @@
 import type { LongTermTask } from '@/entities/planner/types';
-import { compareByCreatedAtAsc } from '@/shared/lib/date';
+import { compareByCreatedAtAsc, compareLatestLongTerm } from '@/shared/lib/date';
 import {
   deleteFromStore,
   getAllFromStore,
@@ -37,11 +37,9 @@ export async function listLongTermTasks(db: IDBDatabase): Promise<LongTermTask[]
 }
 
 export async function getLatestLongTermTask(db: IDBDatabase): Promise<LongTermTask | undefined> {
-  const tx = db.transaction(STORE, 'readonly');
-  const index = tx.objectStore(STORE).index('by_createdAt');
-  const cursor = await promisifyRequest(index.openCursor(null, 'prev'));
-  await waitForTransaction(tx);
-  return cursor?.value as LongTermTask | undefined;
+  const tasks = await listLongTermTasks(db);
+  if (tasks.length === 0) return undefined;
+  return [...tasks].sort(compareLatestLongTerm)[0];
 }
 
 export async function hasLongTermTasks(db: IDBDatabase): Promise<boolean> {

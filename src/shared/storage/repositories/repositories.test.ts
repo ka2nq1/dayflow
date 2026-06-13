@@ -73,6 +73,41 @@ describe('IndexedDB repositories', () => {
     expect(latest?.title).toBe('Latest');
   });
 
+  it('tie-breaks latest long-term to lower id when createdAt matches (AC-03)', async () => {
+    const createdAt = '2026-06-11T10:00:00.000Z';
+    await saveLongTermTask(db, buildLongTermTask({ id: 'goal-b', title: 'B', createdAt }));
+    await saveLongTermTask(db, buildLongTermTask({ id: 'goal-a', title: 'A', createdAt }));
+
+    const latest = await getLatestLongTermTask(db);
+    expect(latest?.id).toBe('goal-a');
+  });
+
+  it('orders steps oldest-first within a goal (AC-17)', async () => {
+    const goal = buildLongTermTask({ title: 'Goal' });
+    await saveLongTermTask(db, goal);
+    await saveStep(
+      db,
+      buildStep({
+        longTermTaskId: goal.id,
+        title: 'Second',
+        createdAt: '2026-06-13T10:00:00.000Z',
+      }),
+    );
+    await saveStep(
+      db,
+      buildStep({
+        longTermTaskId: goal.id,
+        title: 'First',
+        createdAt: '2026-06-13T09:00:00.000Z',
+      }),
+    );
+
+    expect((await listStepsForGoal(db, goal.id)).map((s) => s.title)).toEqual([
+      'First',
+      'Second',
+    ]);
+  });
+
   it('orders long-term tasks oldest-first (AC-17)', async () => {
     await saveLongTermTask(
       db,

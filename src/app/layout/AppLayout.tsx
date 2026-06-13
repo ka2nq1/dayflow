@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import { EmptyStateBanner } from '@/app/components/EmptyStateBanner';
+import { StorageErrorBanner } from '@/app/components/StorageErrorBanner';
 import styles from './AppLayout.module.css';
 
 export function AppLayout() {
@@ -30,6 +31,7 @@ export function AppLayout() {
         </nav>
       </header>
       <main className={styles.main}>
+        <StorageErrorBanner />
         <EmptyStateBanner />
         <Outlet />
       </main>
