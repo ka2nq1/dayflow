@@ -1,0 +1,144 @@
+{
+  "slug": "dayflow-planner",
+  "tasks": [
+    {
+      "id": "T1",
+      "title": "Scaffold Vite React PWA + FSD skeleton",
+      "layer": "wiring",
+      "deps": [],
+      "acs": ["AC-13"],
+      "dod": "Dev server and production build succeed; FSD skeleton and router shell render placeholder routes; PWA manifest stub registered.",
+      "files_hint": ["package.json", "vite.config.ts", "tsconfig.json", "src/app/", "index.html"]
+    },
+    {
+      "id": "T2",
+      "title": "Promote IndexedDB v1 schema migration",
+      "layer": "migration",
+      "deps": ["T1"],
+      "acs": [],
+      "dod": "Staged migration promoted to src/shared/storage/migrations/; fake-indexeddb test proves all stores and indexes apply and revert cleanly.",
+      "files_hint": [
+        "docs/features/dayflow-planner/migrations/01_create_planner_schema.up.ts",
+        "docs/features/dayflow-planner/migrations/01_create_planner_schema.down.ts",
+        "src/shared/storage/"
+      ]
+    },
+    {
+      "id": "T3",
+      "title": "Define planner domain types and validation",
+      "layer": "domain",
+      "deps": ["T1"],
+      "acs": ["AC-05", "AC-06", "AC-08", "AC-14", "AC-16", "AC-17", "AC-20"],
+      "dod": "Unit tests pass for prefix parsing, title validation, duplicate-step guard, and domain sentinel errors.",
+      "files_hint": ["src/entities/daily-task/", "src/entities/long-term-task/", "src/entities/step/", "src/shared/lib/"]
+    },
+    {
+      "id": "T4",
+      "title": "Implement IndexedDB repositories",
+      "layer": "infra",
+      "deps": ["T2", "T3"],
+      "acs": ["AC-17"],
+      "dod": "Repository integration tests verify ordered queries, latest-long-term selection, cascade delete, and export bulk-read helpers.",
+      "files_hint": ["src/shared/storage/repositories/", "src/entities/daily-task/", "src/entities/long-term-task/", "src/entities/step/"]
+    },
+    {
+      "id": "T5",
+      "title": "Build shared UI primitives",
+      "layer": "ui",
+      "deps": ["T1"],
+      "acs": ["AC-07b", "AC-09e", "AC-12d", "AC-12f"],
+      "dod": "Input, Button, Checkbox, ConfirmDialog, and InlineError render with accessibility smoke tests; ConfirmDialog withholds action until confirmed.",
+      "files_hint": ["src/shared/ui/"]
+    },
+    {
+      "id": "T6",
+      "title": "Implement quick-add feature",
+      "layer": "app",
+      "deps": ["T4"],
+      "acs": ["AC-01", "AC-02", "AC-03", "AC-05", "AC-06", "AC-08", "AC-16", "AC-20"],
+      "dod": "Unit tests cover all prefix branches and error paths; successful submits persist via repositories.",
+      "files_hint": ["src/features/quick-add/"]
+    },
+    {
+      "id": "T7",
+      "title": "Implement task-crud feature",
+      "layer": "app",
+      "deps": ["T4"],
+      "acs": ["AC-04", "AC-04b", "AC-04c", "AC-07b", "AC-12b", "AC-12c", "AC-12d", "AC-12e", "AC-12f", "AC-12g", "AC-12h", "AC-14"],
+      "dod": "Unit tests cover daily, goal, and step complete/edit/delete with confirm-gated deletes and blank-title rejection.",
+      "files_hint": ["src/features/task-crud/"]
+    },
+    {
+      "id": "T8",
+      "title": "Implement rollover feature",
+      "layer": "app",
+      "deps": ["T4", "T7"],
+      "acs": ["AC-09", "AC-09b", "AC-09c", "AC-09d", "AC-09e", "AC-09f", "AC-09g"],
+      "dod": "Unit tests verify day-transition, uncapped multi-day rollover block, and move/complete/edit/delete actions.",
+      "files_hint": ["src/features/rollover/"]
+    },
+    {
+      "id": "T9",
+      "title": "Implement backup export/import service",
+      "layer": "app",
+      "deps": ["T4"],
+      "acs": ["AC-07", "AC-10", "AC-11", "AC-11b", "AC-15", "AC-19"],
+      "dod": "Unit tests verify versioned export, invalid-file no-op, replace overwrite, merge id-dedup, and unconfirmed import block.",
+      "files_hint": ["src/features/backup/"]
+    },
+    {
+      "id": "T10",
+      "title": "Build dashboard page",
+      "layer": "ui",
+      "deps": ["T5", "T6", "T7", "T8"],
+      "acs": ["AC-01", "AC-04", "AC-04b", "AC-04c", "AC-05", "AC-09", "AC-09b", "AC-09c", "AC-09d", "AC-09e", "AC-09f", "AC-09g", "AC-18"],
+      "dod": "Dashboard integrates quick-add, today list, rolled-over block, and long-term nav; component tests cover primary flows.",
+      "files_hint": ["src/pages/dashboard/"]
+    },
+    {
+      "id": "T11",
+      "title": "Build long-term page",
+      "layer": "ui",
+      "deps": ["T5", "T6", "T7"],
+      "acs": ["AC-02", "AC-03", "AC-12", "AC-12b", "AC-12c", "AC-12d", "AC-12e", "AC-12f", "AC-12g", "AC-12h", "AC-18"],
+      "dod": "Long-term page shows progress counts and expandable step checklists with confirm-gated deletes; navigation from dashboard works.",
+      "files_hint": ["src/pages/long-term/"]
+    },
+    {
+      "id": "T12",
+      "title": "Build backup settings UI",
+      "layer": "ui",
+      "deps": ["T5", "T9"],
+      "acs": ["AC-07", "AC-10", "AC-11", "AC-11b", "AC-15", "AC-19"],
+      "dod": "Export download and import replace/merge flows require explicit confirmation; invalid backup shows error with no writes.",
+      "files_hint": ["src/pages/settings/", "src/features/backup/"]
+    },
+    {
+      "id": "T13",
+      "title": "Wire PWA offline shell",
+      "layer": "wiring",
+      "deps": ["T1", "T10"],
+      "acs": ["AC-13"],
+      "dod": "Installable production build loads dashboard offline and supports read/write via IndexedDB after airplane-mode smoke test.",
+      "files_hint": ["vite.config.ts", "src/app/", "public/manifest.webmanifest"]
+    },
+    {
+      "id": "T14",
+      "title": "Compose app routing and empty-state recovery",
+      "layer": "wiring",
+      "deps": ["T10", "T11", "T12", "T13"],
+      "acs": ["AC-18"],
+      "dod": "Tab/nav routing connects dashboard, long-term, and settings; empty store shows backup-import recovery guidance.",
+      "files_hint": ["src/app/", "src/pages/"]
+    },
+    {
+      "id": "T15",
+      "title": "Add core integration tests",
+      "layer": "tests",
+      "deps": ["T9", "T14"],
+      "acs": [],
+      "dod": "Integration tests pass for persistence-after-reload, export completeness, import replace/merge, and invalid import no-op.",
+      "files_hint": ["src/**/*.test.ts", "src/**/*.test.tsx", "vitest.config.ts"]
+    }
+  ]
+}
