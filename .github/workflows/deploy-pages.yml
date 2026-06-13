@@ -27,6 +27,8 @@ jobs:
 
       - run: npm ci
       - run: npm run build:pages
+        env:
+          VITE_BASE: /dayflow/
 
       - uses: actions/upload-pages-artifact@v3
         with:
