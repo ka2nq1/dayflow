@@ -138,7 +138,9 @@ C4Container
 
 ## 6. Runtime view
 
-**Critical flow 1: Quick-add daily task (AC-01)**
+### Quick-add daily task (AC-01)
+
+<!-- seed from design — concrete participant names retained -->
 
 ```mermaid
 sequenceDiagram
@@ -153,7 +155,274 @@ sequenceDiagram
     PWA-->>Planner: task visible in today's list
 ```
 
-**Critical flow 2: Merge backup import (AC-11)** — seed only. The `sequences` stage owns full §5 AC coverage (rollover on load, replace import, export, prefix capture, import error paths).
+### Quick-add prefix capture (AC-02, AC-03, AC-05, AC-06, AC-08, AC-16, AC-20)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: Planner on dashboard with quick-add focused
+    U->>UI: confirms quick-add entry
+    UI->>S: parse prefix and title
+    alt empty title after strip
+        S-->>UI: title required
+        UI-->>U: show message, keep focus in quick-add
+    else prefix is +
+        S->>D: read latest long-term task
+        D-->>S: task or none
+        alt no long-term task exists
+            S-->>UI: create long-term task first
+            UI-->>U: show message with hint to use prefix
+        else duplicate step title on parent
+            S-->>UI: step title must be unique within goal
+            UI-->>U: show message
+        else valid step add
+            S->>D: write step on latest long-term task
+            Note over S,D: persists step
+            D-->>S: ack
+            S-->>UI: updated progress count
+            UI-->>U: step added
+        end
+    else prefix is !
+        S->>D: write long-term task
+        Note over S,D: persists long-term task
+        D-->>S: ack
+        S-->>UI: task created
+        UI-->>U: task available in long-term section
+    else no prefix or unrecognized prefix
+        S->>D: write daily task for today
+        Note over S,D: persists daily task (duplicate titles allowed)
+        D-->>S: ack
+        S-->>UI: task added
+        UI-->>U: task visible on today list, focus retained
+    end
+    Note over U,S: Postcondition: valid entries persisted, invalid entries blocked with plain message
+```
+
+### Manage daily task on dashboard (AC-04, AC-04b, AC-04c, AC-07b, AC-14)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: daily task exists on today's list
+    U->>UI: chooses action on daily task
+    alt mark complete
+        UI->>S: complete task
+        S->>D: update daily task completed flag
+        Note over S,D: persists daily task
+        D-->>S: ack
+        S-->>UI: completed state
+        UI-->>U: task stays visible as completed
+    else edit title
+        U->>UI: saves edited title
+        UI->>S: validate and update title
+        alt blank title
+            S-->>UI: title required
+            UI-->>U: show message, keep edit open
+        else valid title
+            S->>D: update daily task title
+            Note over S,D: persists daily task
+            D-->>S: ack
+            S-->>UI: updated title
+            UI-->>U: show new title on today list
+        end
+    else delete task
+        U->>UI: requests delete
+        alt delete not confirmed
+            UI-->>U: show confirm dialog, withhold removal
+        else delete confirmed
+            UI->>S: delete task
+            S->>D: remove daily task
+            Note over S,D: removes daily task
+            D-->>S: ack
+            S-->>UI: task removed
+            UI-->>U: task gone from today list
+        end
+    end
+    Note over U,S: Postcondition: task state matches Planner action or action blocked until confirm
+```
+
+### Rollover on dashboard load (AC-09f, AC-09b)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: incomplete daily tasks exist on prior calendar days
+    U->>UI: opens dashboard on new calendar day
+    UI->>S: run day-transition check
+    S->>D: read last-seen calendar day
+    D-->>S: stored date
+    S->>S: compare stored date to today in local timezone
+    alt calendar day advanced
+        S->>D: read incomplete daily tasks before today
+        D-->>S: prior-day incomplete tasks
+        S->>D: mark tasks as rolled-over
+        Note over S,D: persists daily task rollover state
+        D-->>S: ack
+        S-->>UI: rolled-over block payload
+        UI-->>U: all prior-day incomplete tasks shown together in rolled-over block
+    else same calendar day
+        S-->>UI: existing dashboard state
+        UI-->>U: no rollover change
+    end
+    Note over U,S: Postcondition: every incomplete prior-day daily appears in rolled-over block without dropping older items
+```
+
+### Manage rolled-over task (AC-09, AC-09c, AC-09d, AC-09e, AC-09g)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: incomplete task shown in rolled-over block
+    U->>UI: chooses action on rolled-over task
+    alt move to today
+        UI->>S: move task to today
+        S->>D: update daily task active date to today
+        Note over S,D: persists daily task
+        D-->>S: ack
+        S-->>UI: updated lists
+        UI-->>U: task removed from rollover, shown on today list
+    else mark complete
+        UI->>S: complete task
+        S->>D: update daily task completed flag
+        Note over S,D: persists daily task
+        D-->>S: ack
+        S-->>UI: task completed
+        UI-->>U: task removed from rolled-over block
+    else edit title
+        U->>UI: saves edited title
+        UI->>S: update title
+        S->>D: update daily task title
+        Note over S,D: persists daily task
+        D-->>S: ack
+        S-->>UI: updated title
+        UI-->>U: new title shown in rolled-over block
+    else delete task
+        U->>UI: requests delete
+        alt delete not confirmed
+            UI-->>U: show confirm dialog, withhold removal
+        else delete confirmed
+            UI->>S: delete task
+            S->>D: remove daily task
+            Note over S,D: removes daily task
+            D-->>S: ack
+            S-->>UI: task removed
+            UI-->>U: task gone from rolled-over block
+        end
+    end
+    Note over U,S: Postcondition: rolled-over task updated, moved, completed, or removed per Planner action
+```
+
+### Long-term section (AC-12, AC-12b, AC-12c, AC-12d, AC-12e, AC-12f, AC-12g, AC-12h, AC-18)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: long-term tasks and steps exist on device
+    U->>UI: opens long-term section from dashboard
+    UI->>S: load long-term tasks with step progress
+    S->>D: read long-term tasks and steps ordered by creation time
+    D-->>S: tasks with steps
+    S-->>UI: progress counts and expandable checklists
+    UI-->>U: long-term section with all goals and progress
+    U->>UI: chooses action on goal or step
+    alt complete step
+        UI->>S: complete step
+        S->>D: update step completed flag
+        Note over S,D: persists step
+        D-->>S: ack
+        S-->>UI: updated progress count
+        UI-->>U: step marked complete
+    else edit long-term task title
+        UI->>S: update long-term task title
+        S->>D: update long-term task
+        Note over S,D: persists long-term task
+        D-->>S: ack
+        S-->>UI: updated title
+        UI-->>U: new title in long-term section
+    else edit step title
+        UI->>S: update step title
+        S->>D: update step
+        Note over S,D: persists step
+        D-->>S: ack
+        S-->>UI: updated step title
+        UI-->>U: new title under goal
+    else delete long-term task
+        U->>UI: requests delete
+        alt delete not confirmed
+            UI-->>U: show confirm dialog, withhold removal
+        else delete confirmed
+            UI->>S: delete long-term task and steps
+            S->>D: remove long-term task and child steps
+            Note over S,D: removes long-term task and steps
+            D-->>S: ack
+            S-->>UI: goal removed
+            UI-->>U: goal gone from long-term section
+        end
+    else delete step
+        U->>UI: requests delete
+        alt delete not confirmed
+            UI-->>U: show confirm dialog, withhold removal
+        else delete confirmed
+            UI->>S: delete step
+            S->>D: remove step
+            Note over S,D: removes step
+            D-->>S: ack
+            S-->>UI: updated progress count
+            UI-->>U: step removed from goal
+        end
+    end
+    Note over U,S: Postcondition: long-term section reflects latest goal and step state
+```
+
+### Export backup (AC-10)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: daily tasks, long-term tasks, and steps on device
+    U->>UI: requests backup export
+    UI->>S: export all planner data
+    S->>D: read all daily tasks, long-term tasks, and steps
+    D-->>S: full dataset
+    S->>S: build versioned JSON with DayFlow backup marker
+    S-->>UI: backup file payload
+    UI-->>U: downloadable backup file with all records
+    Note over U,S: Postcondition: backup contains 100% of on-device tasks and steps
+```
+
+### Import backup merge (AC-11)
+
+<!-- seed from design — concrete participant names retained -->
 
 ```mermaid
 sequenceDiagram
@@ -168,6 +437,116 @@ sequenceDiagram
     Store-->>PWA: merge summary (added / skipped)
     PWA-->>Planner: success confirmation
 ```
+
+### Import backup replace (AC-11b)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: valid backup file selected, replace chosen and confirmed
+    U->>UI: confirms replace import
+    UI->>S: validate backup file
+    S->>S: verify version marker and required collections
+    alt valid backup
+        S->>D: clear all planner records
+        S->>D: write all records from backup
+        Note over S,D: replaces daily tasks, long-term tasks, and steps
+        D-->>S: ack
+        S-->>UI: import success
+        UI-->>U: all on-device data replaced with backup contents
+    end
+    Note over U,S: Postcondition: device data matches backup after successful replace
+```
+
+### Import validation and errors (AC-07, AC-15, AC-19)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: Planner selected a backup file to import
+    U->>UI: attempts import
+    alt replace or merge not chosen or not confirmed
+        UI-->>U: block import, explain replace or merge must be chosen and confirmed
+    else backup unreadable or invalid
+        UI->>S: read and validate backup file
+        S->>S: check JSON, version marker, and required collections
+        alt invalid backup
+            S-->>UI: invalid backup
+            UI-->>U: show message, make no data changes
+        else valid backup
+            S-->>UI: ready for merge or replace flow
+            UI-->>U: proceed to chosen import path
+        end
+    end
+    Note over U,S: Postcondition: no data changes until valid backup and explicit replace or merge confirm
+```
+
+### Install and use offline (AC-13)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as user
+    participant UI as ui
+    participant S as service
+    participant D as data-store
+
+    Note over U,S: Precondition: Planner opens DayFlow in supported mobile browser while online
+    U->>UI: installs app to home screen
+    UI->>S: register service worker and cache app shell
+    S-->>UI: install prompt handled
+    UI-->>U: app installed
+    U->>UI: opens app later without network
+    UI->>S: load dashboard offline
+    S->>D: read planner data
+    D-->>S: tasks and steps
+    S-->>UI: dashboard state
+    UI-->>U: dashboard loads, read and write tasks available offline
+    Note over U,S: Postcondition: installed app works without connectivity for core flows
+```
+
+### AC coverage map
+
+| AC | Covered by |
+|---|---|
+| AC-01 | Quick-add daily task (seed) |
+| AC-02, AC-03, AC-05, AC-06, AC-08, AC-16, AC-20 | Quick-add prefix capture |
+| AC-04, AC-04b, AC-04c, AC-07b, AC-14 | Manage daily task on dashboard |
+| AC-09f, AC-09b | Rollover on dashboard load |
+| AC-09, AC-09c, AC-09d, AC-09e, AC-09g | Manage rolled-over task |
+| AC-12, AC-12b–h, AC-18 | Long-term section |
+| AC-10 | Export backup |
+| AC-11 | Import backup merge (seed) |
+| AC-11b | Import backup replace |
+| AC-07, AC-15, AC-19 | Import validation and errors |
+| AC-13 | Install and use offline |
+| AC-17 | Non-runtime N/A — creation-order sort applied on data-store read and list render |
+
+| User story | Flow(s) |
+|---|---|
+| US-01 | Quick-add daily task, Quick-add prefix capture |
+| US-02 | Quick-add prefix capture |
+| US-03 | Quick-add prefix capture |
+| US-04 | Manage daily task on dashboard |
+| US-05 | Long-term section |
+| US-06 | Rollover on dashboard load, Manage rolled-over task |
+| US-07 | Export backup |
+| US-08 | Import backup merge, Import backup replace, Import validation and errors |
+| US-09 | Install and use offline |
+
+**Flags (for design / data-model follow-up):**
+- Two seed diagrams retain concrete names from `design` — new flows use generic `<user>` → `<ui>` → `<service>` → `<data-store>` vocabulary per sequences convention.
+- Persist notes imply indexes on: daily task by active date and completion, long-term task by creation time, step by parent long-term task id, record id for merge dedup, last-seen calendar day for rollover.
 
 ## 7. Deployment view
 
