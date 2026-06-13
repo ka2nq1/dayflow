@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="96" fill="#0A0D12"/>
+  <text
+    x="256"
+    y="336"
+    text-anchor="middle"
+    fill="#4FC3F7"
+    font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace"
+    font-size="224"
+    font-weight="700"
+  >DF</text>
+</svg>
