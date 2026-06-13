@@ -1,0 +1,39 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 44px;
+  cursor: pointer;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--color-text-primary);
+}
+
+.input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.box {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.25rem;
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+
+.input:focus-visible + .box {
+  outline: 2px solid var(--color-accent-cold);
+  outline-offset: 2px;
+}
+
+.input:checked + .box {
+  background: var(--color-accent-cold);
+  border-color: var(--color-accent-cold);
+}
+
+.text {
+  line-height: 1.4;
+}

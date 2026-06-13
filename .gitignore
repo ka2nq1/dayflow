@@ -1,0 +1,6 @@
+.claude/*.local.md
+.worktrees/
+node_modules
+dist
+test-results
+playwright-report
